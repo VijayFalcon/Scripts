@@ -1,0 +1,198 @@
+// Programmed by Vijay Aravindh S. - 23BAI1160
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <regex.h>
+
+#define BUFFER_SIZE 100
+#define TOTAL_SIZE 1000
+
+const char* keywords[] = {
+    "int", "float", "char", "if", "else", "while",
+    "return", "void", "printf", "scanf"
+};
+
+const int NUM_KEYWORDS = 10;
+
+int is_delimiter(char c) {
+    return isspace((unsigned char)c) || c == ' ';
+}
+
+const char* check_keyword(const char* str) {
+    for (int i = 0; i < NUM_KEYWORDS; i++) {
+        if (strcmp(str, keywords[i]) == 0) {
+            return "keyword";
+        }
+    }
+    return NULL;
+}
+
+const char* check_operator(char c) {
+    switch (c) {
+        case '+': case '-': case '*': case '/':
+        case '%': case '=': case '<':
+            return "operator";
+        default:
+            return NULL;
+    }
+}
+
+const char* check_special_character(char c) {
+    switch (c) {
+        case '(': case ')': case '{': case '}':
+        case ';': case ',': case ':':
+            return "special character";
+        default:
+            return NULL;
+    }
+}
+
+int is_exit_command(const char *str) {
+    if (strlen(str) < 3) return 0;
+    if (tolower((unsigned char)str[0]) == 'e' &&
+        tolower((unsigned char)str[1]) == 'n' &&
+        tolower((unsigned char)str[2]) == 'd') 
+    {
+        if (str[3] == '\0') return 1;
+        if (str[3] == '\n' && str[4] == '\0') return 1;
+    }
+    return 0;
+}
+
+void extract_lexemes(char* input) {
+    int len = strlen(input);
+    int i = 0;
+
+    while (i < len) {
+        char c = input[i];
+
+        if (isspace((unsigned char)c)) {
+            i++;
+            continue;
+        }
+
+        const char* type_op = check_operator(c);
+        if (type_op != NULL) {
+            printf("%c %s\n", c, type_op);
+            i++;
+            continue;
+        }
+
+        const char* type_sep = check_special_character(c);
+        if (type_sep != NULL) {
+            // Check for string literals (simplified logic for quotes)
+            if (c == '"') {
+                i++;
+                while (i < len && input[i] != '"' && input[i] != '\n') {
+                    if (input[i] == '%') {
+                        if (i + 1 < len) {
+                            char format_specifier[3];
+                            format_specifier[0] = input[i];
+                            format_specifier[1] = input[i+1];
+                            format_specifier[2] = '\0';
+
+                            if (isalpha((unsigned char)input[i+1]) || input[i+1] == 'd' || 
+                                input[i+1] == 'f' || input[i+1] == 's' || 
+                                input[i+1] == 'c' || input[i+1] == '%') 
+                            {
+                                printf("%s format specifier\n", format_specifier);
+                                i += 2;
+                                continue;
+                            }
+                        }
+                    }
+                    if (input[i] != '"' && input[i] != '\n') {
+                        if (!isspace((unsigned char)input[i])) {
+                            printf("%c constant\n", input[i]);
+                        }
+                        i++;
+                    }
+                }
+                if (input[i] == '"') {
+                    printf("\" special character\n");
+                    i++;
+                    continue;
+                } else {
+                    fprintf(stderr, "Lexical Error: Unterminated string literal.\n");
+                    i++;
+                    continue;
+                }
+            } else {
+                printf("%c %s\n", c, type_sep);
+                i++;
+                continue;
+            }
+        }
+
+        // Handle Identifiers and Keywords
+        if (isalpha((unsigned char)c) || c == '_') {
+            int start = i;
+            while (i < len && (isalnum((unsigned char)input[i]) || input[i] == '_')) {
+                i++;
+            }
+            int length = i - start;
+            char lexeme[BUFFER_SIZE];
+            strncpy(lexeme, input + start, length);
+            lexeme[length] = '\0';
+
+            const char* token_type = check_keyword(lexeme);
+            if (token_type == NULL) {
+                token_type = "variable";
+            }
+            printf("%s %s\n", lexeme, token_type);
+            continue;
+        }
+
+        // Handle Digits/Constants
+        if (isdigit((unsigned char)c)) {
+            int start = i;
+            while (i < len && isdigit((unsigned char)input[i])) {
+                i++;
+            }
+            if (i < len && input[i] == '.') {
+                i++;
+                while (i < len && isdigit((unsigned char)input[i])) {
+                    i++;
+                }
+            }
+            int length = i - start;
+            char lexeme[BUFFER_SIZE];
+            strncpy(lexeme, input + start, length);
+            lexeme[length] = '\0';
+            printf("%s constant\n", lexeme);
+            continue;
+        }
+
+        i++;
+    }
+}
+
+int main(void) {
+    char total_input[TOTAL_SIZE] = "";
+    char temp_buffer[BUFFER_SIZE];
+
+    printf("Enter the program. Type 'end' on a new line to finish:\n");
+    while (1) {
+        if (fgets(temp_buffer, BUFFER_SIZE, stdin) == NULL) {
+            break;
+        }
+
+        if (is_exit_command(temp_buffer)) {
+            break;
+        }
+
+        if (strlen(total_input) + strlen(temp_buffer) >= TOTAL_SIZE) {
+            fprintf(stderr, "Input too long, stopping reading.\n");
+            break;
+        }
+        strcat(total_input, temp_buffer);
+    }
+
+    printf("\n%s\n\n", total_input);
+    if (strlen(total_input) > 0) {
+        extract_lexemes(total_input);
+    }
+
+    return 0;
+}
