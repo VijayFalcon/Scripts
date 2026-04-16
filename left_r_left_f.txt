@@ -1,0 +1,97 @@
+// Programmed by Vijay Aravindh S. (23BAI1160)
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+void removeLeftRecursion(char *input) {
+    char lhs = input[0];
+    char *rhs_str = strstr(input, "->") + 2;
+    char alpha[50] = "", beta[50] = "";
+    char temp[100];
+    
+    strcpy(temp, rhs_str);
+    char *token = strtok(temp, "|");
+    
+    while (token != NULL) {
+        if (token[0] == lhs) {
+            strcpy(alpha, token + 1); // Get the part after the recursive symbol
+        } else {
+            strcpy(beta, token);      // Get the non-recursive part
+        }
+        token = strtok(NULL, "|");
+    }
+
+    printf("\nAfter Removing Left Recursion:\n");
+    if (strlen(alpha) > 0) {
+        printf("%c -> %s%c'\n", lhs, beta, lhs);
+        printf("%c' -> %s%c' | e\n", lhs, alpha, lhs);
+    } else {
+        printf("No Left Recursion detected.\n");
+    }
+}
+
+void removeLeftFactoring(char *input) {
+    char lhs = input[0];
+    char *rhs_str = strstr(input, "->") + 2;
+    char productions[10][50];
+    int count = 0;
+    char temp[100];
+
+    strcpy(temp, rhs_str);
+    char *token = strtok(temp, "|");
+    while (token != NULL) {
+        strcpy(productions[count++], token);
+        token = strtok(NULL, "|");
+    }
+
+    char prefix[50] = "";
+    int j = 0;
+    while (1) {
+        char current_char = productions[0][j];
+        if (current_char == '\0') break;
+
+        int match = 1;
+        for (int i = 1; i < count; i++) {
+            if (productions[i][j] != current_char) {
+                match = 0;
+                break;
+            }
+        }
+
+        if (match) {
+            prefix[j] = current_char;
+            j++;
+        } else {
+            break;
+        }
+    }
+    prefix[j] = '\0';
+
+    printf("\nAfter Left Factoring:\n");
+    if (strlen(prefix) > 0) {
+        printf("%c -> %s%c'\n", lhs, prefix, lhs);
+        printf("%c' -> ", lhs);
+        for (int i = 0; i < count; i++) {
+            char *remaining = productions[i] + strlen(prefix);
+            printf("%s%s", (strlen(remaining) == 0) ? "e" : remaining, (i == count - 1) ? "" : " | ");
+        }
+        printf("\n");
+    } else {
+        printf("No common prefix found. Grammar remains: %s\n", input);
+    }
+}
+
+int main() {
+    printf("Programmed by Vijay Aravindh S. (23BAI1160)\n\n");
+    char grammar1[100], grammar2[100];
+
+    printf("Enter grammar for Left Recursion (e.g., E->E+T|T): ");
+    scanf("%s", grammar1);
+    removeLeftRecursion(grammar1);
+
+    printf("\nEnter grammar for Left Factoring (e.g., A->aB|aC): ");
+    scanf("%s", grammar2);
+    removeLeftFactoring(grammar2);
+
+    return 0;
+}
