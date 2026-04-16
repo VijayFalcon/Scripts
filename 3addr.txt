@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+int precedence(char op){
+    if(op=='+'||op=='-') return 1;
+    if(op=='/'||op=='*') return 2;
+}
+
+void solve(char stack[][10],int* top,char op_stack[],int* op_top,int* t_count){
+    char op = op_stack[(*op_top)--];
+    char arg1[10];
+    char arg2[10];
+    strcpy(arg2,stack[(*top)--]);
+    strcpy(arg1,stack[(*top)--]);
+    printf("t%d = %s %c %s\n",*t_count,arg1,op,arg2);
+    sprintf(stack[++(*top)],"t%d",(*t_count)++);
+}
+
+int main(){
+    char expr[100];
+    char stack[100][10];
+    char op_stack[100];
+    int top = -1;
+    int op_top = -1;
+    int t_count = 1;
+    printf("Enter the expression: ");
+    scanf("%s",expr);
+    char target = expr[0];
+    char* right_side = strchr(expr,'=')+1;
+    for(int i=0;i<strlen(right_side);i++){
+        char c = right_side[i];
+        if(isalnum(c)){
+            char tmp[2] = {c,'\0'};
+            strcpy(stack[++top],tmp);
+        }
+        else{
+            while(op_top!=-1 && precedence(op_stack[op_top])>=precedence(c)){
+                solve(stack,&top,op_stack,&op_top,&t_count);
+            }
+            op_stack[++op_top] = c;
+        }
+    }
+    while(op_top!=-1){
+        solve(stack,&top,op_stack,&op_top,&t_count);
+    }
+    printf("%c = %s\n",target,stack[top]);
+    return 0;
+}

@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+int main() {
+    int n, i, leaders[20] = {0};
+    char code[20][50];
+
+    printf("Enter the number of 3AC lines: ");
+    scanf("%d", &n);
+    getchar();
+
+    printf("Enter the 3AC lines (e.g., (1) If A<B goto (3)):\n");
+    for (i = 1; i <= n; i++) {
+        fgets(code[i], 50, stdin);
+    }
+
+    leaders[1] = 1;
+
+    for (i = 1; i <= n; i++) {
+        char *ptr = strstr(code[i], "goto");
+        if (ptr != NULL) {
+            char *targetPtr = strchr(ptr, '(');
+            if (targetPtr != NULL) {
+                int target = atoi(targetPtr + 1);
+                if (target <= n) leaders[target] = 1;
+            }
+            if (i + 1 <= n) {
+                leaders[i + 1] = 1;
+            }
+        }
+    }
+
+    printf("\nLeaders are: ");
+    int first = 1;
+    for (i = 1; i <= n; i++) {
+        if (leaders[i]) {
+            if (!first) printf(", ");
+            printf("%d", i);
+            first = 0;
+        }
+    }
+    printf("\n");
+
+    return 0;
+}

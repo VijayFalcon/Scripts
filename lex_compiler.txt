@@ -1,0 +1,57 @@
+%{
+#include <stdio.h>
+#include <string.h>
+
+int id_count = 0, op_count = 0, sc_count = 0;
+int word_count = 0, char_count = 0, line_count = 0;
+int loop_count = 0;
+%}
+
+DIGIT       [0-9]
+LETTER      [a-zA-Z]
+ID          [a-zA-Z_][a-zA-Z0-9_]*
+OP          "+"|"-"|"*"|"/"|"="| "=="|"<"|">"|"&&"|"||"
+SC          "("|")"|"{"|"}"|"["|"]"|";"|","|"."
+MOBILE      [6-9][0-9]{9}
+AADHAR      [2-9][0-9]{3}[ ][0-9]{4}[ ][0-9]{4}
+EMAIL       [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
+LOOPS       "for"|"while"|"do"
+
+%%
+
+{MOBILE}    { printf("\nValid Mobile Number: %s", yytext); }
+{AADHAR}    { printf("\nValid Aadhar Number: %s", yytext); }
+{EMAIL}     { printf("\nValid Email ID: %s", yytext); }
+
+{LOOPS}     { loop_count++; id_count++; printf("\nLoop construct found: %s", yytext); }
+
+{ID}        { id_count++; word_count++; char_count += strlen(yytext); }
+{OP}        { op_count++; char_count += strlen(yytext); }
+{SC}        { sc_count++; char_count += strlen(yytext); }
+
+\n          { line_count++; char_count++; }
+[ \t]+      { char_count += strlen(yytext); } /* Count whitespace as characters */
+.           { char_count++; } /* Catch-all for any other single characters */
+
+%%
+
+int yywrap() {
+    return 1;
+}
+
+int main() {
+    printf("Programmed by Vijay Aravindh S. (23BAI1160)\n\n");
+    printf("Enter the text/code (Ctrl+D to finish):\n");
+    yylex();
+
+    printf("\n\n--- RESULTS ---");
+    printf("\nIdentifiers: %d", id_count);
+    printf("\nOperators: %d", op_count);
+    printf("\nSpecial Characters: %d", sc_count);
+    printf("\nLoops: %d", loop_count);
+    printf("\nWords: %d", word_count);
+    printf("\nCharacters: %d", char_count);
+    printf("\nLines: %d\n", line_count);
+
+    return 0;
+}

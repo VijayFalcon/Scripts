@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct Grammar {
+    char lhs;
+    char rhs[20];
+} rules[10];
+
+char stack[20];
+char input[20];
+int stackPointer = 0;
+int n; 
+
+void display() {
+    printf("\n%s\t\t%s\t\t", stack, input);
+}
+
+void reduce() {
+    for (int k = 0; k < n; k++) {
+        int rhs_len = strlen(rules[k].rhs);
+        if (stackPointer >= rhs_len) {
+            if (strncmp(&stack[stackPointer - rhs_len], rules[k].rhs, rhs_len) == 0) {
+                display();
+                printf("Reduce: %c -> %s", rules[k].lhs, rules[k].rhs);
+                stackPointer -= rhs_len;
+                stack[stackPointer] = rules[k].lhs;
+                stack[stackPointer + 1] = '\0';
+                stackPointer++;
+                reduce(); 
+                return;
+            }
+        }
+    }
+}
+
+int main() {
+    printf("Enter number of productions: ");
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        char temp[20];
+        printf("Enter production %d (e.g., E=E+T): ", i + 1);
+        scanf("%s", temp);
+        rules[i].lhs = temp[0];
+        strcpy(rules[i].rhs, &temp[2]); 
+    }
+    printf("Enter input string: ");
+    scanf("%s", input);
+    printf("\nStack\t\tInput\t\tAction");
+    printf("\n$\t\t%s$\t\t--", input);
+    int input_len = strlen(input);
+    for (int i = 0; i < input_len; i++) {
+        char current_char = input[i];
+        stack[stackPointer] = current_char;
+        stack[stackPointer + 1] = '\0';
+        stackPointer++;
+        input[i] = ' '; 
+        display();
+        printf("Shift: %c", current_char);
+        reduce();
+    }
+
+    if (stackPointer == 1 && stack[0] == rules[0].lhs) {
+        printf("\n\nString Accepted\n");
+    } else {
+        printf("\n\nString Rejected\n");
+    }
+
+    return 0;
+}

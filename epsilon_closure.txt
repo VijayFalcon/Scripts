@@ -1,0 +1,78 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+void dfs(int s, int m, int **adj, int *visited, int *L, int *count) {
+    if (visited[s]) return;
+    visited[s] = 1;
+    L[(*count)++] = s;
+    for (int v = 0; v < m; v++) {
+        if (adj[s][v]) {
+            dfs(v, m, adj, visited, L, count);
+        }
+    }
+}
+
+int main() {
+    int m, n;
+    printf("Programmed by Vijay Aravindh S. (23BAI1160)\n\n");
+    
+    printf("\nEnter the number of states: ");
+    scanf("%d", &m);
+    
+    printf("\nEnter the number of transitions: ");
+    scanf("%d", &n);
+
+    // Allocate adjacency matrix for epsilon transitions
+    int *adj = (int)malloc(m * sizeof(int));
+    for (int i = 0; i < m; i++) {
+        adj[i] = (int*)calloc(m, sizeof(int));
+    }
+
+    // Allocate table to store transition details
+    int (*table)[3] = malloc(n * sizeof *table);
+    for (int i = 0; i < n; i++) {
+        printf("\nEnter the start state: ");
+        scanf("%d", &table[i][0]);
+        printf("\nEnter the string type (1 for epsilon, 0 for everything else): ");
+        scanf("%d", &table[i][1]);
+        printf("\nEnter the end state: ");
+        scanf("%d", &table[i][2]);
+
+        // If it's an epsilon transition, add to adjacency matrix
+        if (table[i][1] == 1 && table[i][0] >= 0 && table[i][0] < m && table[i][2] >= 0 && table[i][2] < m) {
+            adj[table[i][0]][table[i][2]] = 1;
+        }
+    }
+
+    printf("\nEntered states: \n");
+    for (int i = 0; i < n; i++) {
+        printf("%d %d %d\n", table[i][0], table[i][1], table[i][2]);
+    }
+
+    // Calculate epsilon closure for each state
+    for (int i = 0; i < m; i++) {
+        int visited = (int)calloc(m, sizeof(int));
+        int L = (int)malloc((m + 1) * sizeof(int));
+        int count = 0;
+
+        dfs(i, m, adj, visited, L, &count);
+
+        printf("\nState %d      {", i);
+        for (int j = 0; j < count; j++) {
+            printf("%d ", L[j]);
+        }
+        printf("}");
+
+        free(visited);
+        free(L);
+    }
+
+    // Clean up memory
+    for (int i = 0; i < m; i++) {
+        free(adj[i]);
+    }
+    free(adj);
+    free(table);
+
+    return 0;
+}
