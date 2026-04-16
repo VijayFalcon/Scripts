@@ -1,0 +1,74 @@
+// Programmed by Vijay Aravindh S. (23BAI1160)
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <regex.h>
+#include <ctype.h>
+
+int main() {
+    char str[100];
+    printf("Enter the code snippet: ");
+    fgets(str, sizeof(str), stdin);
+
+    const char *delimiters = " ,;";
+    char *datatypes[] = {"int", "float", "char", "long", "double", "short", "const"};
+    
+    // Regex for variables: Starts with a letter/underscore, followed by alphanumerics
+    regex_t reg_variable;
+    int comp_var = regcomp(&reg_variable, "^[[:alpha:]_][[:alnum:]_]*$", REG_EXTENDED);
+    
+    // Regex for constants: Digits only
+    regex_t reg_constant;
+    int comp_const = regcomp(&reg_constant, "^[[:digit:]]+$", REG_EXTENDED);
+
+    if (comp_var || comp_const) {
+        printf("Regex compilation error.\n");
+        return 1;
+    }
+
+    int i, j;
+    char temp_token[100];
+    for (i = 0; i < strlen(str); i++) {
+        if (isspace(str[i])) continue;
+
+        // Check for single-character special characters
+        if (str[i] == ',' || str[i] == '=' || str[i] == ';') {
+            printf("%c Special character\n", str[i]);
+            continue;
+        }
+
+        // Extract word/token
+        j = 0;
+        while (isalnum(str[i]) || str[i] == '_') {
+            temp_token[j++] = str[i++];
+        }
+        temp_token[j] = '\0';
+        i--; // Adjust index after while loop
+
+        if (j > 0) {
+            char *type = "Unknown";
+            
+            // 1. Check if it's a Datatype
+            for (int k = 0; k < 7; k++) {
+                if (strcmp(temp_token, datatypes[k]) == 0) {
+                    type = "Datatype";
+                    break;
+                }
+            }
+
+            // 2. If not a datatype, check if it's a Constant or Variable using Regex
+            if (strcmp(type, "Unknown") == 0) {
+                if (regexec(&reg_constant, temp_token, 0, NULL, 0) == 0) {
+                    type = "Constant";
+                } else if (regexec(&reg_variable, temp_token, 0, NULL, 0) == 0) {
+                    type = "Variable";
+                }
+            }
+            printf("%s %s\n", temp_token, type);
+        }
+    }
+
+    regfree(&reg_variable);
+    regfree(&reg_constant);
+    return 0;
+}
