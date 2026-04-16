@@ -1,0 +1,38 @@
+//Programmed by Vijay Aravindh S. (23BAI1160)
+#include <stdio.h>
+#include <regex.h>
+
+int main() {
+    regex_t reg;
+    int value;
+    
+    // Pattern: Starts with a digit, followed by zero or more alphanumeric chars, ending with 'c'
+    int value1 = regcomp(&reg, "[[:digit:]][[:alnum:]]*c", 0);
+    
+    if (value1 == 0) {
+        printf("Regex compiled successfully!\n");
+    } else {
+        printf("Error whilst compiling Regex.\n");
+        return 1; // Exit if regex fails to compile
+    }
+    
+    char example[100];
+    printf("Enter a string to test: ");
+    fgets(example, sizeof(example), stdin);
+    
+    // Execute regex match
+    int value2 = regexec(&reg, example, 0, NULL, 0);
+    
+    if (value2 == 0) {
+        printf("\nPattern found!");
+    } else if (value2 == REG_NOMATCH) {
+        printf("\nPattern not found!");
+    } else {
+        printf("\nError!");
+    }
+
+    // Free memory allocated for regex
+    regfree(&reg);
+    
+    return 0;
+}
